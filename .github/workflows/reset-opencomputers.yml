@@ -9,7 +9,6 @@ permissions:
 
 jobs:
   reset:
-    if: startsWith(github.event.head_commit.message, 'Prepare clean OpenComputers reset')
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
