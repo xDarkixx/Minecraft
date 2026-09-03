@@ -30,8 +30,7 @@ jobs:
           fi
 
           mkdir -p /tmp/oc-modern
-          cp -a build.gradle settings.gradle gradle.properties gradlew gradlew.bat /tmp/oc-modern/
-          cp -a src /tmp/oc-modern/
+          cp -a build.gradle settings.gradle gradle.properties src /tmp/oc-modern/
           cp -a .github/workflows/build.yml /tmp/oc-modern/build.yml
 
           rm -rf /tmp/upstream
@@ -41,7 +40,7 @@ jobs:
           mkdir -p OpenComputers/upstream-mc1.12
           cp -a /tmp/upstream/. OpenComputers/upstream-mc1.12/
 
-          cp -a /tmp/oc-modern/build.gradle /tmp/oc-modern/settings.gradle /tmp/oc-modern/gradle.properties /tmp/oc-modern/gradlew /tmp/oc-modern/gradlew.bat .
+          cp -a /tmp/oc-modern/build.gradle /tmp/oc-modern/settings.gradle /tmp/oc-modern/gradle.properties .
           cp -a /tmp/oc-modern/src .
           mkdir -p .github/workflows
           cp -a /tmp/oc-modern/build.yml .github/workflows/build.yml
