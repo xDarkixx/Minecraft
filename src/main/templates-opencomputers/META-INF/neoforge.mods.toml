@@ -1,0 +1,24 @@
+modLoader = "javafml"
+loaderVersion = "[1,)"
+license = "${mod_license}"
+
+[[mods]]
+modId = "${opencomputers_mod_id}"
+version = "${mod_version}"
+displayName = "${opencomputers_mod_name}"
+authors = "MightyPirates OpenComputers / Minecraft Community"
+description = '''Modern NeoForge port foundation of OpenComputers for Minecraft ${minecraft_version}.'''
+
+[[dependencies.${opencomputers_mod_id}]]
+modId = "neoforge"
+type = "required"
+versionRange = "[${neo_version},)"
+ordering = "NONE"
+side = "BOTH"
+
+[[dependencies.${opencomputers_mod_id}]]
+modId = "minecraft"
+type = "required"
+versionRange = "${minecraft_version_range}"
+ordering = "NONE"
+side = "BOTH"
