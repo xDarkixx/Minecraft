@@ -33,16 +33,16 @@ neoForge {
     runs {
         client {
             client()
-            systemProperty 'neoforge.enabledGameTestNamespaces', 'dragonapi,rotarycraft'
+            systemProperty 'neoforge.enabledGameTestNamespaces', 'dragonapi,rotarycraft,opencomputers'
         }
         server {
             server()
             programArgument '--nogui'
-            systemProperty 'neoforge.enabledGameTestNamespaces', 'dragonapi,rotarycraft'
+            systemProperty 'neoforge.enabledGameTestNamespaces', 'dragonapi,rotarycraft,opencomputers'
         }
         gameTestServer {
             type = 'gameTestServer'
-            systemProperty 'neoforge.enabledGameTestNamespaces', 'dragonapi,rotarycraft'
+            systemProperty 'neoforge.enabledGameTestNamespaces', 'dragonapi,rotarycraft,opencomputers'
         }
         data {
             clientData()
@@ -58,6 +58,9 @@ neoForge {
             sourceSet(sourceSets.main)
         }
         rotarycraft {
+            sourceSet(sourceSets.main)
+        }
+        opencomputers {
             sourceSet(sourceSets.main)
         }
     }
@@ -89,7 +92,9 @@ var generateModMetadata = tasks.register('generateModMetadata', ProcessResources
         mod_version: mod_version,
         mod_group_id: mod_group_id,
         rotary_mod_id: rotary_mod_id,
-        rotary_mod_name: rotary_mod_name
+        rotary_mod_name: rotary_mod_name,
+        opencomputers_mod_id: opencomputers_mod_id,
+        opencomputers_mod_name: opencomputers_mod_name
     ]
     inputs.properties replaceProperties
     expand replaceProperties
