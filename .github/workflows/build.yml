@@ -24,10 +24,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          if [ -f PORTING_STATUS.md ]; then
-            echo 'Clean OpenComputers layout already exists.'
-            exit 0
-          fi
+          if [ -f PORTING_STATUS.md ]; then exit 0; fi
           mkdir -p /tmp/oc-modern
           cp -a build.gradle settings.gradle gradle.properties src /tmp/oc-modern/
           cp -a .github/workflows/build.yml /tmp/oc-modern/build.yml
@@ -43,8 +40,8 @@ jobs:
           rm -f .github/workflows/reset-opencomputers.yml .github/workflows/import-opencomputers-mc1.12.yml
           rm -rf src/main/java/de/xdarkixx/minecraft/dragonapi src/main/java/de/xdarkixx/minecraft/rotarycraft src/test/java/de/xdarkixx/minecraft/dragonapi src/test/java/de/xdarkixx/minecraft/rotarycraft || true
           printf '%s\n' '.gradle/' 'build/' 'out/' '.idea/' '*.iml' > .gitignore
-          printf '%s\n' '# OpenComputers modern port' '' 'The original MightyPirates OpenComputers MC1.12 source is retained unchanged under `OpenComputers/upstream-mc1.12` as the exact reference implementation.' '' 'Active target: Minecraft 26.2 (latest stable Java release), NeoForge 26.2.0.62, Java 25.' '' 'Minecraft 26.3 is currently a pre-release, so the stable target remains 26.2.' > PORTING_STATUS.md
-          printf '%s\n' '# OpenComputers Community Port' '' 'Modern NeoForge port of OpenComputers for Minecraft 26.2.' '' 'The original MC1.12 source is retained unchanged under `OpenComputers/upstream-mc1.12` for exact comparison. The active port is under `src`.' > README.md
+          printf '%s\n' '# OpenComputers modern port' '' 'Original MightyPirates OpenComputers MC1.12 source is retained unchanged under `OpenComputers/upstream-mc1.12` as the exact reference.' '' 'Active target: Minecraft 26.2, NeoForge 26.2.0.62, Java 25.' > PORTING_STATUS.md
+          printf '%s\n' '# OpenComputers Community Port' '' 'Modern NeoForge port of OpenComputers for Minecraft 26.2.' > README.md
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
           git add -A
@@ -53,7 +50,6 @@ jobs:
 
       - name: Refresh workspace after clean reset
         if: github.event_name == 'push'
-        shell: bash
         run: |
           git fetch origin main
           git reset --hard origin/main
@@ -74,19 +70,22 @@ jobs:
       - name: Build and test OpenComputers
         run: gradle --no-daemon clean build
 
+      - name: Upload diagnostic JAR
+        uses: actions/upload-artifact@v4
+        with:
+          name: OpenComputers-diagnostic
+          path: build/libs/*.jar
+          if-no-files-found: error
+
       - name: Verify distributable JAR
         shell: bash
         run: |
           set -euo pipefail
-          jar_path=build/libs/OpenComputers.jar
-          test -f "$jar_path"
-          jar tf "$jar_path" > /tmp/opencomputers-jar.txt
+          test -f build/libs/OpenComputers.jar
+          jar tf build/libs/OpenComputers.jar > /tmp/opencomputers-jar.txt
           grep -Fqx 'META-INF/neoforge.mods.toml' /tmp/opencomputers-jar.txt
           grep -Fqx 'de/xdarkixx/minecraft/opencomputers/OpenComputersMod.class' /tmp/opencomputers-jar.txt
-          if grep -Eq '(^|/)(dragonapi|rotarycraft|Reika)(/|$)' /tmp/opencomputers-jar.txt; then
-            echo 'Unrelated DragonAPI/RotaryCraft content found in OpenComputers.jar'
-            exit 1
-          fi
+          if grep -Eq '(^|/)(dragonapi|rotarycraft|Reika)(/|$)' /tmp/opencomputers-jar.txt; then exit 1; fi
 
       - name: Dedicated server smoke test
         shell: bash
@@ -95,10 +94,7 @@ jobs:
           timeout 180s gradle --no-daemon runServer 2>&1 | tee server.log
           status=${PIPESTATUS[0]}
           set -e
-          if [ "$status" -ne 0 ] && [ "$status" -ne 124 ]; then
-            echo 'NeoForge server failed to start'
-            exit "$status"
-          fi
+          if [ "$status" -ne 0 ] && [ "$status" -ne 124 ]; then exit "$status"; fi
           grep -Eqi 'opencomputers' server.log
 
       - name: Upload JAR
