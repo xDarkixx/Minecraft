@@ -27,6 +27,12 @@ sourceSets.main.resources {
     srcDir('src/generated/resources')
 }
 
+// The legacy and modern resource trees intentionally overlap in a few placeholder
+// files. Keep the first copy rather than failing Gradle's resource processing.
+tasks.named('processResources', ProcessResources).configure {
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+}
+
 neoForge {
     version = project.neo_version
 
