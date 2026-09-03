@@ -17,6 +17,10 @@ java.toolchain.languageVersion = JavaLanguageVersion.of(25)
 repositories {
 }
 
+dependencies {
+    testImplementation 'org.junit.jupiter:junit-jupiter:5.13.4'
+}
+
 sourceSets.main.resources {
     srcDir('DragonAPI/Resources')
     srcDir('RotaryCraft/Resources')
@@ -65,6 +69,10 @@ configurations {
 
 tasks.withType(JavaCompile).configureEach {
     options.encoding = 'UTF-8'
+}
+
+tasks.withType(Test).configureEach {
+    useJUnitPlatform()
 }
 
 // Legacy 1.7.10 sources in DragonAPI/ and RotaryCraft/ are intentionally not
