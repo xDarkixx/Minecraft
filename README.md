@@ -1,6 +1,6 @@
-# Minecraft Community – DragonAPI & RotaryCraft
+# Minecraft Community – DragonAPI, RotaryCraft & OpenComputers
 
-Community modernization project for the legacy DragonAPI and RotaryCraft codebase.
+Community modernization project for the legacy DragonAPI, RotaryCraft and OpenComputers codebases.
 
 ## Target
 
@@ -16,20 +16,28 @@ Minecraft 26.2 is the released target. The project is pinned to a known NeoForge
 
 - `DragonAPI/` – preserved legacy DragonAPI tree and resources
 - `RotaryCraft/` – preserved legacy RotaryCraft tree and resources
+- `OpenComputers/` – migration notes and port status
 - `src/main/java/` – new, independently maintained 26.2 implementation
-- `src/main/templates/META-INF/neoforge.mods.toml` – metadata for both mods
+- `src/main/templates/META-INF/neoforge.mods.toml` – metadata for all three mods
 - `COMMUNITY_PORTING.md` – migration order and release criteria
 
 The old 1.7.10 Java sources are deliberately not compiled by the modern build. Historical material stays available while the modern implementation is migrated subsystem-by-subsystem.
 
 ## Current foundation
 
-- Separate NeoForge entrypoints for `dragonapi` and `rotarycraft`
-- Shared modern build for both mod IDs
+- Separate NeoForge entrypoints for `dragonapi`, `rotarycraft` and `opencomputers`
+- Shared modern build for all three mod IDs
 - Loader-independent DragonAPI registration/index foundation
 - Loader-independent RotaryCraft mechanical power state
+- OpenComputers 26.2 registry foundation with a registered computer hardware anchor
 - Legacy source trees excluded from the 26.2 Java compilation
 - GitHub Actions build using Java 25 and Gradle 9.1
+
+## OpenComputers port status
+
+The original MightyPirates OpenComputers project targets Minecraft 1.7.10. The new `opencomputers` module is therefore a real API migration, not a direct source copy. The first milestone establishes the modern mod entrypoint, registry layer, item/block assets and a dedicated migration roadmap. Full computer/robot/Lua/component parity is still being ported.
+
+See `OpenComputers/PORT_STATUS.md` for the subsystem order and licensing notes.
 
 ## Migration rules
 
@@ -46,4 +54,4 @@ GitHub Actions is configured to build the project with Java 25 and Gradle 9.1. A
 
 ## Status
 
-The community foundation is implemented. Full feature parity with the original 1.7.10 projects is **not yet claimed**; the remaining systems are being migrated according to `COMMUNITY_PORTING.md`. Release readiness requires a successful client build, dedicated-server build, both mod IDs loading, and automated regression coverage.
+The community foundation is implemented. Full feature parity with the original 1.7.10 projects is **not yet claimed**; the remaining systems are being migrated according to `COMMUNITY_PORTING.md`. Release readiness requires a successful client build, dedicated-server build, all three mod IDs loading, and automated regression coverage.
