@@ -96,11 +96,7 @@ sourceSets.main.resources.srcDir generateOpenComputersModMetadata
 neoForge.ideSyncTask generateOpenComputersModMetadata
 
 tasks.named('jar').configure {
-    archiveFileName = 'Minecraft.jar'
-}
-
-tasks.register('openComputersJar', Jar) {
-    dependsOn tasks.classes, tasks.processResources, generateOpenComputersModMetadata
+    dependsOn generateOpenComputersModMetadata
     archiveFileName = 'Minecraft.jar'
     duplicatesStrategy = DuplicatesStrategy.EXCLUDE
 
@@ -109,29 +105,13 @@ tasks.register('openComputersJar', Jar) {
         include 'assets/opencomputers/**'
         include 'data/opencomputers/**'
         include 'opencomputers/**'
-    }
-
-    from('src/main/templates-opencomputers') {
         include 'META-INF/neoforge.mods.toml'
-        expand([
-            minecraft_version: minecraft_version,
-            minecraft_version_range: minecraft_version_range,
-            neo_version: neo_version,
-            opencomputers_mod_id: opencomputers_mod_id,
-            opencomputers_mod_name: opencomputers_mod_name,
-            mod_license: mod_license,
-            mod_version: mod_version
-        ])
     }
 
     from(configurations.runtimeClasspath.collect { zipTree(it) }) {
         include 'org/classdump/luna/**'
         exclude 'META-INF/**'
     }
-}
-
-tasks.named('build').configure {
-    dependsOn 'openComputersJar'
 }
 
 publishing {
