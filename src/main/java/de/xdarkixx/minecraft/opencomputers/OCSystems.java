@@ -66,9 +66,9 @@ public final class OCSystems {
             Objects.requireNonNull(item, "item");
             if (amount < 0) throw new IllegalArgumentException("amount must be non-negative");
             int current = count(item);
-            int usedSlots = (int) stacks.values().stream().mapToInt(v -> (v + maxStack - 1) / maxStack).sum();
-            int totalCapacity = (slots - usedSlots) * maxStack + current;
-            int accepted = Math.min(amount, Math.max(0, totalCapacity - current));
+            long total = stacks.values().stream().mapToLong(Integer::longValue).sum();
+            int capacity = slots * maxStack;
+            int accepted = (int) Math.min((long) amount, Math.max(0L, capacity - total));
             if (accepted > 0) stacks.put(item, current + accepted);
             return accepted;
         }
