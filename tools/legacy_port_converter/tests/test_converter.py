@@ -32,12 +32,12 @@ class ConverterTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
             src = root / "Example.java"
-            original = "class Example {\r\n}\r\n"
-            src.write_text(original, encoding="utf-8", newline="")
+            original = b"class Example {\r\n}\r\n"
+            src.write_bytes(original)
             out = root / "out" / "Example.java"
             converter.convert_file(src, out)
-            self.assertEqual(src.read_text(encoding="utf-8"), original)
-            self.assertEqual(out.read_text(encoding="utf-8"), "class Example {\n}\n")
+            self.assertEqual(src.read_bytes(), original)
+            self.assertEqual(out.read_bytes(), b"class Example {\n}\n")
 
     def test_report_is_json_serializable(self):
         finding = converter.Finding("x.java", 1, "rule", "warning", "text", "suggestion")
