@@ -10,7 +10,7 @@ This directory tracks the modern port of the archived `MightyPirates/OpenCompute
 
 ## Current milestone
 
-- Target: **Minecraft Java 26.2 (latest stable release)**
+- Target: **Minecraft Java 26.2**
 - Loader: NeoForge 26.2.x
 - Java: 25
 - Mod ID: `opencomputers`
@@ -18,26 +18,38 @@ This directory tracks the modern port of the archived `MightyPirates/OpenCompute
 - Registered hardware anchor: `opencomputers:computer`
 - Lua runtime: Luna / Lua 5.3
 
-Minecraft Java 26.2 is the latest stable release at the time of this port; Minecraft 26.3 is currently a pre-release, so it is not used as the production target.
+## Implemented in the current port
+
+- Computer lifecycle, server ticking and chunk persistence
+- Component registry and built-in component inventory
+- EEPROM and virtual HDD abstraction
+- Persistent, host-independent virtual filesystem
+- Energy storage/consumption model
+- Inventory insertion/extraction model
+- In-process modem/network packet routing and subscriptions
+- GPU-style text screen buffer and keyboard event queue
+- Robot movement, orientation, energy and inventory
+- OpenOS bootstrap resource and Lua runtime boundary
+- Computer crafting recipe and existing client block/item models
+- Automated unit coverage for the subsystem layer
+
+## Still required before `Minecraft.jar` is marked finished
+
+1. Bind every component operation into the Lua environment (`computer`, `component`, `filesystem`, `gpu`, `screen`, `keyboard`, `modem`, `robot`, `inventory_controller`).
+2. Replace the bootstrap-only OpenOS resource with the full OpenOS userspace/driver set needed for the migrated API.
+3. Add real Minecraft-side robot entity/item interaction and inventory capabilities.
+4. Add the final client-side screen/GPU/keyboard renderer and interaction events.
+5. Complete EEPROM/HDD item/block registration and recipe/data coverage beyond the computer anchor.
+6. Add GameTest coverage for placement, ticking, persistence, networking and client/server boundaries.
+7. Run the full Gradle build plus client and dedicated-server smoke tests and inspect the produced `Minecraft.jar`.
+
+`Minecraft.jar` must **not** be declared finished until the remaining items above are verified by CI.
 
 ## Upstream compatibility
 
 The only functional reference for this port is the original `MightyPirates/OpenComputers` source. The original project targets Minecraft 1.7.10 and cannot be compiled unchanged against the modern API, so its behavior is being reimplemented subsystem-by-subsystem for NeoForge 26.2.
 
 The original OpenComputers project describes persistent programmable computers and robots with an embedded Lua runtime. The modern port keeps the same architectural goals while replacing legacy Minecraft/Forge APIs with current NeoForge APIs.
-
-## Migration order
-
-1. Registry and item/block foundation
-2. Computer state, persistence and lifecycle
-3. Component/device API
-4. Lua runtime and sandbox boundary
-5. Robot/entity subsystem
-6. Network, energy and inventory adapters
-7. Screens, keyboards and client rendering
-8. Recipes, loot, tags and data generation
-9. Compatibility and GameTest coverage
-10. Client and dedicated-server startup verification
 
 ## Verification rule
 
