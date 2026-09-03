@@ -6,6 +6,7 @@ import org.classdump.luna.Variable;
 import org.classdump.luna.compiler.CompilerChunkLoader;
 import org.classdump.luna.exec.DirectCallExecutor;
 import org.classdump.luna.load.ChunkLoader;
+import org.classdump.luna.load.LoaderException;
 import org.classdump.luna.runtime.LuaFunction;
 import org.classdump.luna.impl.StateContexts;
 
@@ -40,6 +41,8 @@ public final class LuaRuntime {
             ChunkLoader loader = CompilerChunkLoader.of("opencomputers");
             LuaFunction function = loader.loadTextChunk(new Variable(environment), "computer", source);
             DirectCallExecutor.newExecutorWithTickLimit(policy.operationLimit()).call(state, function);
+        } catch (LoaderException ex) {
+            throw new IllegalArgumentException("Invalid Lua source", ex);
         } catch (Exception ex) {
             throw new IllegalStateException("Lua execution failed", ex);
         }
