@@ -18,6 +18,7 @@ repositories {
 }
 
 dependencies {
+    implementation 'org.classdump.luna:luna-all-shaded:0.2'
     testImplementation 'org.junit.jupiter:junit-jupiter:5.13.4'
 }
 
@@ -27,8 +28,6 @@ sourceSets.main.resources {
     srcDir('src/generated/resources')
 }
 
-// The legacy and modern resource trees intentionally overlap in a few placeholder
-// files. Keep the first copy rather than failing Gradle's resource processing.
 tasks.named('processResources', ProcessResources).configure {
     duplicatesStrategy = DuplicatesStrategy.EXCLUDE
 }
@@ -83,9 +82,6 @@ tasks.withType(JavaCompile).configureEach {
 tasks.withType(Test).configureEach {
     useJUnitPlatform()
 }
-
-// Legacy 1.7.10 sources in DragonAPI/ and RotaryCraft/ are intentionally not
-// compiled by this modern build. They remain available as historical material.
 
 var generateModMetadata = tasks.register('generateModMetadata', ProcessResources) {
     var replaceProperties = [
