@@ -20,17 +20,17 @@ public final class OCRegistries {
     public static final DeferredRegister<BlockEntityType<?>> BLOCK_ENTITIES =
             DeferredRegister.create(Registries.BLOCK_ENTITY_TYPE, OpenComputersMod.MOD_ID);
 
-    public static final DeferredBlock<Block> COMPUTER = BLOCKS.registerBlock(
+    public static final DeferredBlock<ComputerBlock> COMPUTER = BLOCKS.registerBlock(
             "computer",
             ComputerBlock::new,
-            BlockBehaviour.Properties.of().destroyTime(2.0f).explosionResistance(6.0f)
+            properties -> properties.destroyTime(2.0f).explosionResistance(6.0f)
     );
 
     public static final DeferredItem<BlockItem> COMPUTER_ITEM = ITEMS.registerSimpleBlockItem(COMPUTER);
 
     public static final DeferredHolder<BlockEntityType<?>, BlockEntityType<ComputerBlockEntity>> COMPUTER_ENTITY =
             BLOCK_ENTITIES.register("computer", () ->
-                    BlockEntityType.Builder.of(ComputerBlockEntity::new, COMPUTER.get()).build(null));
+                    new BlockEntityType<>(ComputerBlockEntity::new, false, COMPUTER.get()));
 
     public static void register(IEventBus modBus) {
         BLOCKS.register(modBus);
