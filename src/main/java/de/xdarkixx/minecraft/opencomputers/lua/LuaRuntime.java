@@ -36,9 +36,9 @@ public final class LuaRuntime {
         if (source == null) {
             throw new IllegalArgumentException("Lua source is required");
         }
-        ChunkLoader loader = CompilerChunkLoader.of("opencomputers");
-        LuaFunction function = loader.loadTextChunk(new Variable(environment), "computer", source);
         try {
+            ChunkLoader loader = CompilerChunkLoader.of("opencomputers");
+            LuaFunction function = loader.loadTextChunk(new Variable(environment), "computer", source);
             DirectCallExecutor.newExecutorWithTickLimit(policy.operationLimit()).call(state, function);
         } catch (Exception ex) {
             throw new IllegalStateException("Lua execution failed", ex);
