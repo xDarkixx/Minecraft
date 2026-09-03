@@ -35,13 +35,13 @@ jobs:
       - name: Verify distributable JAR
         shell: bash
         run: |
-          test -f build/libs/Minecraft.jar
-          if jar tf build/libs/Minecraft.jar | grep -Eq '^(de/xdarkixx/minecraft/(dragonapi|rotarycraft)/|Reika/)'; then
-            echo 'Unrelated DragonAPI/RotaryCraft classes found in Minecraft.jar'
+          test -f build/libs/OpenComputers.jar
+          if jar tf build/libs/OpenComputers.jar | grep -Eq '^(de/xdarkixx/minecraft/(dragonapi|rotarycraft)/|Reika/)'; then
+            echo 'Unrelated DragonAPI/RotaryCraft classes found in OpenComputers.jar'
             exit 1
           fi
-          jar tf build/libs/Minecraft.jar | grep -q '^de/xdarkixx/minecraft/opencomputers/OpenComputersMod.class$'
-          jar tf build/libs/Minecraft.jar | grep -q '^META-INF/neoforge.mods.toml$'
+          jar tf build/libs/OpenComputers.jar | grep -q '^de/xdarkixx/minecraft/opencomputers/OpenComputersMod.class$'
+          jar tf build/libs/OpenComputers.jar | grep -q '^META-INF/neoforge.mods.toml$'
 
       - name: Dedicated server smoke test
         shell: bash
@@ -60,7 +60,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: OpenComputers-Minecraft
-          path: build/libs/Minecraft.jar
+          path: build/libs/OpenComputers.jar
           if-no-files-found: error
 
       - name: Upload server log
