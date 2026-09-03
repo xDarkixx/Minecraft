@@ -9,7 +9,13 @@ import org.classdump.luna.load.ChunkLoader;
 import org.classdump.luna.runtime.LuaFunction;
 import org.classdump.luna.impl.StateContexts;
 
-/** Embedded Lua 5.3 execution boundary for an OpenComputers computer. */
+/** Embedded Lua 5.3 execution boundary for an OpenComputers computer.
+ *
+ * The environment is intentionally a fresh, empty table. No Luna system
+ * runtime or standard library is installed here, so Lua code cannot obtain
+ * host filesystem, environment-variable, process, reflection, or socket
+ * capabilities through the JVM.
+ */
 public final class LuaRuntime {
     private final StateContext state = StateContexts.newDefaultInstance();
     private final Table environment = state.newTable();
@@ -20,6 +26,9 @@ public final class LuaRuntime {
     }
 
     public LuaRuntime(LuaSandboxPolicy policy) {
+        if (policy == null) {
+            throw new IllegalArgumentException("policy is required");
+        }
         this.policy = policy;
     }
 
