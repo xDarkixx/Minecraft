@@ -1,0 +1,44 @@
+name: Import OpenComputers MC1.12 Base
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [ main ]
+
+permissions:
+  contents: write
+
+jobs:
+  import-upstream:
+    if: github.event_name == 'workflow_dispatch' || github.event.head_commit.message != 'Import OpenComputers MC1.12 base'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout current project
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Fetch upstream MC1.12 source
+        run: |
+          git clone --depth 1 --branch revert-3728-master-MC1.12 https://github.com/MightyPirates/OpenComputers.git upstream
+
+      - name: Stage upstream source and licenses
+        run: |
+          set -euxo pipefail
+          rm -rf OpenComputers/upstream-mc1.12
+          mkdir -p OpenComputers/upstream-mc1.12
+          cp -a upstream/src OpenComputers/upstream-mc1.12/
+          cp -a upstream/assets OpenComputers/upstream-mc1.12/ || true
+          cp -a upstream/LICENSE* OpenComputers/upstream-mc1.12/
+          cp -a upstream/README.md OpenComputers/upstream-mc1.12/
+          printf '%s\n' 'Upstream source imported from MightyPirates/OpenComputers branch revert-3728-master-MC1.12.' 'This directory is reference/staging material; the modern NeoForge build files in this repository remain authoritative.' > OpenComputers/upstream-mc1.12/IMPORT_SOURCE.txt
+          rm -rf upstream
+
+      - name: Commit imported base
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add OpenComputers/upstream-mc1.12
+          git diff --cached --quiet && exit 0
+          git commit -m 'Import OpenComputers MC1.12 base'
+          git push origin main
