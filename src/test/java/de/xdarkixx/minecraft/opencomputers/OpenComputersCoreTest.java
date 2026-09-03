@@ -3,6 +3,7 @@ package de.xdarkixx.minecraft.opencomputers;
 import de.xdarkixx.minecraft.opencomputers.api.BasicComponent;
 import de.xdarkixx.minecraft.opencomputers.api.ComponentContainer;
 import de.xdarkixx.minecraft.opencomputers.hardware.VirtualFileSystem;
+import java.nio.charset.StandardCharsets;
 import java.util.Set;
 import java.util.UUID;
 import org.junit.jupiter.api.Test;
@@ -35,7 +36,7 @@ class OpenComputersCoreTest {
     @Test
     void filesystemPersistsAndRestores() {
         VirtualFileSystem first = new VirtualFileSystem(8192);
-        first.write("home/boot.lua", "print('boot')".getBytes());
+        first.write("home/boot.lua", "return 42".getBytes(StandardCharsets.UTF_8));
         String snapshot = first.serialize();
         VirtualFileSystem second = new VirtualFileSystem(8192);
         second.deserialize(snapshot);
@@ -94,6 +95,21 @@ class OpenComputersCoreTest {
         assertEquals("oc", packet.channel());
         assertEquals("hello", packet.payload().get(0));
         assertEquals(42, packet.payload().get(1));
+    }
+
+    @Test
+    void luaRuntimeExecutesSandboxedCode() {
+        ComputerState state = new ComputerState();
+        assertDoesNotThrow(() -> state.executeLua("local value = 21 * 2; return value"));
+    }
+
+    @Test
+    void computerBootsLuaFromFilesystem() {
+        ComputerState state = new ComputerState();
+        state.storage().filesystem().write("home/init.lua", "local booted = true; return booted".getBytes(StandardCharsets.UTF_8));
+        state.setRunning(true);
+        assertDoesNotThrow(state::tick);
+        assertEquals(1, state.ticks());
     }
 
     @Test
