@@ -9,7 +9,7 @@ group = mod_group_id
 version = mod_version
 
 base {
-    archivesName = 'Minecraft'
+    archivesName = 'OpenComputers'
 }
 
 java.toolchain.languageVersion = JavaLanguageVersion.of(25)
@@ -33,73 +33,35 @@ tasks.named('processResources', ProcessResources).configure {
 
 neoForge {
     version = project.neo_version
-
     runs {
-        client {
-            client()
-            systemProperty 'neoforge.enabledGameTestNamespaces', 'opencomputers'
-        }
-        server {
-            server()
-            programArgument '--nogui'
-            systemProperty 'neoforge.enabledGameTestNamespaces', 'opencomputers'
-        }
-        gameTestServer {
-            type = 'gameTestServer'
-            systemProperty 'neoforge.enabledGameTestNamespaces', 'opencomputers'
-        }
-        data {
-            clientData()
-            programArguments.addAll '--all', '--output', file('src/generated/resources/').getAbsolutePath(), '--existing', file('src/main/resources/').getAbsolutePath()
-        }
-        configureEach {
-            logLevel = org.slf4j.event.Level.INFO
-        }
+        client { client(); systemProperty 'neoforge.enabledGameTestNamespaces', 'opencomputers' }
+        server { server(); programArgument '--nogui'; systemProperty 'neoforge.enabledGameTestNamespaces', 'opencomputers' }
+        gameTestServer { type = 'gameTestServer'; systemProperty 'neoforge.enabledGameTestNamespaces', 'opencomputers' }
+        data { clientData(); programArguments.addAll '--all', '--output', file('src/generated/resources/').getAbsolutePath(), '--existing', file('src/main/resources/').getAbsolutePath() }
+        configureEach { logLevel = org.slf4j.event.Level.INFO }
     }
-
-    mods {
-        opencomputers {
-            sourceSet(sourceSets.main)
-        }
-    }
+    mods { opencomputers { sourceSet(sourceSets.main) } }
 }
 
-configurations {
-    runtimeClasspath.extendsFrom localRuntime
-}
+configurations { runtimeClasspath.extendsFrom localRuntime }
 
-tasks.withType(JavaCompile).configureEach {
-    options.encoding = 'UTF-8'
-}
-
-tasks.withType(Test).configureEach {
-    useJUnitPlatform()
-}
+tasks.withType(JavaCompile).configureEach { options.encoding = 'UTF-8' }
+tasks.withType(Test).configureEach { useJUnitPlatform() }
 
 var generateOpenComputersModMetadata = tasks.register('generateOpenComputersModMetadata', ProcessResources) {
-    var replaceProperties = [
-        minecraft_version: minecraft_version,
-        minecraft_version_range: minecraft_version_range,
-        neo_version: neo_version,
-        opencomputers_mod_id: opencomputers_mod_id,
-        opencomputers_mod_name: opencomputers_mod_name,
-        mod_license: mod_license,
-        mod_version: mod_version
-    ]
+    var replaceProperties = [minecraft_version: minecraft_version, minecraft_version_range: minecraft_version_range, neo_version: neo_version, opencomputers_mod_id: opencomputers_mod_id, opencomputers_mod_name: opencomputers_mod_name, mod_license: mod_license, mod_version: mod_version]
     inputs.properties replaceProperties
     expand replaceProperties
     from 'src/main/templates-opencomputers'
     into 'build/generated/sources/opencomputersModMetadata'
 }
-
 sourceSets.main.resources.srcDir generateOpenComputersModMetadata
 neoForge.ideSyncTask generateOpenComputersModMetadata
 
 tasks.named('jar').configure {
     dependsOn generateOpenComputersModMetadata
-    archiveFileName = 'Minecraft.jar'
+    archiveFileName = 'OpenComputers.jar'
     duplicatesStrategy = DuplicatesStrategy.EXCLUDE
-
     from(sourceSets.main.output) {
         include 'de/xdarkixx/minecraft/opencomputers/**'
         include 'assets/opencomputers/**'
@@ -107,7 +69,6 @@ tasks.named('jar').configure {
         include 'opencomputers/**'
         include 'META-INF/neoforge.mods.toml'
     }
-
     from(configurations.runtimeClasspath.collect { zipTree(it) }) {
         include 'org/classdump/luna/**'
         exclude 'META-INF/**'
@@ -115,21 +76,8 @@ tasks.named('jar').configure {
 }
 
 publishing {
-    publications {
-        register('mavenJava', MavenPublication) {
-            from components.java
-        }
-    }
-    repositories {
-        maven {
-            url = uri("${project.projectDir}/repo")
-        }
-    }
+    publications { register('mavenJava', MavenPublication) { from components.java } }
+    repositories { maven { url = uri("${project.projectDir}/repo") } }
 }
 
-idea {
-    module {
-        downloadSources = true
-        downloadJavadoc = true
-    }
-}
+idea { module { downloadSources = true; downloadJavadoc = true } }
