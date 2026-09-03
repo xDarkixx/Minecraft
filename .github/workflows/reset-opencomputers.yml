@@ -40,18 +40,14 @@ jobs:
           set -euo pipefail
           rm -rf /tmp/upstream
           git clone --depth 1 --branch revert-3728-master-MC1.12 https://github.com/MightyPirates/OpenComputers.git /tmp/upstream
-
           git rm -r .
           mkdir -p OpenComputers/upstream-mc1.12
           cp -a /tmp/upstream/. OpenComputers/upstream-mc1.12/
-
-          # Restore only the modern OpenComputers port and its tests/build files.
           cp -a /tmp/oc-modern/. .
           rm -rf src/main/java/de/xdarkixx/minecraft/dragonapi \
                  src/main/java/de/xdarkixx/minecraft/rotarycraft \
                  src/test/java/de/xdarkixx/minecraft/dragonapi \
                  src/test/java/de/xdarkixx/minecraft/rotarycraft || true
-
           mkdir -p .github/workflows
           cat > .gitignore <<'EOF'
 .gradle/
@@ -60,15 +56,14 @@ out/
 .idea/
 *.iml
 EOF
-
           cat > PORTING_STATUS.md <<'EOF'
 # OpenComputers modern port
 
-This repository contains the original MightyPirates OpenComputers MC1.12 source under `OpenComputers/upstream-mc1.12` and the active NeoForge port in the modern project source tree.
+The original MightyPirates OpenComputers MC1.12 source is retained unchanged under `OpenComputers/upstream-mc1.12` as the reference implementation.
 
-Target: Minecraft 26.2 (latest stable release at the time of this reset), NeoForge 26.2.0.62, Java 25.
+The active port targets Minecraft 26.2, the latest stable Minecraft Java release at this reset, with NeoForge 26.2.0.62 and Java 25.
 
-The upstream source is retained unchanged as the reference implementation. Modern Minecraft-facing code is ported separately so the original implementation can be compared function-by-function.
+Minecraft 26.3 is currently a pre-release, not a stable release, so it is not used as the production target.
 EOF
 
       - name: Rebuild cleanly
