@@ -16,19 +16,37 @@ The reference repositories are used to understand architecture and feature inten
 - Java 25
 - ModDevGradle 2.0.143
 
-## Port order
+## Port order and current status
 
-1. Core identifiers, registration and lifecycle foundation
-2. Common utility and serialization layer
-3. Networking and server/client separation
-4. Rotary power model: speed, torque, power and transmission limits
-5. Blocks, block entities and inventories
-6. Machines and processing systems
-7. Items, tools and upgrades
-8. GUI/menu and client rendering systems
-9. World generation, recipes, tags and data generation
-10. Compatibility integrations and optional modules
-11. Automated tests and dedicated-server verification
+| Order | Subsystem | Owner | Status |
+|---:|---|---|---|
+| 1 | Core identifiers, registration and lifecycle foundation | DragonAPI | **Implemented foundation** |
+| 2 | Common utility and serialization layer | DragonAPI | Planned |
+| 3 | Networking and server/client separation | DragonAPI | Planned |
+| 4 | Rotary power model: speed, torque, power and transmission limits | RotaryCraft | **Implemented pure core** |
+| 5 | Blocks, block entities and inventories | RotaryCraft | Planned |
+| 6 | Machines and processing systems | RotaryCraft | Planned |
+| 7 | Items, tools and upgrades | RotaryCraft | Planned |
+| 8 | GUI/menu and client rendering systems | Both | Planned |
+| 9 | World generation, recipes, tags and data generation | Both | Planned |
+| 10 | Compatibility integrations and optional modules | Both | Planned |
+| 11 | Automated tests and dedicated-server verification | Both | In progress continuously |
+
+The migration priority is encoded in `PortingPriority.ordered()` so tooling and documentation share one sequence.
+
+## Implemented first milestones
+
+### DragonAPI foundation
+
+- `CommunityId` provides a validated, loader-independent identifier.
+- `RegistrationTracker` provides deterministic duplicate-safe registration/indexing.
+- `DragonAPICommunity` is the modern NeoForge entrypoint.
+
+### RotaryCraft mechanical core
+
+- `RotaryPowerState` models speed and torque without Minecraft dependencies.
+- `RotaryTransmission` models ratio, efficiency and torque limits.
+- JUnit regression tests cover ideal power preservation and efficiency/limit behavior.
 
 ## Compatibility rule
 
