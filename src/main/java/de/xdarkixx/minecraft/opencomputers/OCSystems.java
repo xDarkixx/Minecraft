@@ -14,29 +14,22 @@ import java.util.Arrays;
 import java.util.Deque;
 import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.UUID;
 
-/**
- * Functional OpenComputers subsystem layer. The implementation is deliberately
- * host-safe: storage is virtual, networking is in-process, and device calls
- * are explicit Java operations exposed to the Lua bridge.
- */
+/** Functional OpenComputers subsystem layer with host-safe storage and networking. */
 public final class OCSystems {
     private OCSystems() {}
 
     public static final class Energy {
         private final long capacity;
         private long stored;
-
         public Energy(long capacity) {
             if (capacity <= 0) throw new IllegalArgumentException("capacity must be positive");
             this.capacity = capacity;
             this.stored = capacity;
         }
-
         public long capacity() { return capacity; }
         public long stored() { return stored; }
         public long free() { return capacity - stored; }
@@ -59,7 +52,6 @@ public final class OCSystems {
         private final int slots;
         private final int maxStack;
         private final Map<String, Integer> stacks = new LinkedHashMap<>();
-
         public Inventory(int slots, int maxStack) {
             if (slots <= 0 || maxStack <= 0) throw new IllegalArgumentException("invalid inventory size");
             this.slots = slots;
@@ -73,9 +65,9 @@ public final class OCSystems {
             Objects.requireNonNull(item, "item");
             if (amount < 0) throw new IllegalArgumentException("amount must be non-negative");
             int current = count(item);
-            int usedSlots = (int) stacks.values().stream().filter(v -> v > 0).count();
-            int room = current > 0 ? maxStack - current : (slots - usedSlots) * maxStack;
-            int accepted = Math.min(amount, Math.max(0, room));
+            int usedSlots = (int) stacks.values().stream().mapToInt(v -> (v + maxStack - 1) / maxStack).sum();
+            int totalCapacity = (slots - usedSlots) * maxStack + current;
+            int accepted = Math.min(amount, Math.max(0, totalCapacity - current));
             if (accepted > 0) stacks.put(item, current + accepted);
             return accepted;
         }
@@ -90,14 +82,10 @@ public final class OCSystems {
 
     public static final class Network {
         public record Packet(UUID sender, UUID receiver, String channel, List<Object> payload) {
-            public Packet {
-                payload = List.copyOf(payload == null ? List.of() : payload);
-            }
+            public Packet { payload = List.copyOf(payload == null ? List.of() : payload); }
         }
-
         private final Map<UUID, Deque<Packet>> queues = new LinkedHashMap<>();
         private final Map<UUID, Set<String>> channels = new LinkedHashMap<>();
-
         public synchronized void register(UUID address) { queues.putIfAbsent(address, new ArrayDeque<>()); }
         public synchronized void subscribe(UUID address, String channel) {
             register(address);
@@ -113,10 +101,7 @@ public final class OCSystems {
             }
             return true;
         }
-        public synchronized Packet receive(UUID address) {
-            register(address);
-            return queues.get(address).pollFirst();
-        }
+        public synchronized Packet receive(UUID address) { register(address); return queues.get(address).pollFirst(); }
     }
 
     public static final class Keyboard {
@@ -132,24 +117,17 @@ public final class OCSystems {
         private final char[][] cells;
         private int cursorX;
         private int cursorY;
-
         public Screen(int width, int height) {
             if (width < 1 || height < 1) throw new IllegalArgumentException("invalid screen size");
             this.width = width;
             this.height = height;
-            this.cells = new char[height][width];
+            cells = new char[height][width];
             clear();
         }
         public int width() { return width; }
         public int height() { return height; }
-        public void clear() {
-            for (char[] row : cells) Arrays.fill(row, ' ');
-            cursorX = cursorY = 0;
-        }
-        public void setCursor(int x, int y) {
-            cursorX = Math.max(0, Math.min(width - 1, x));
-            cursorY = Math.max(0, Math.min(height - 1, y));
-        }
+        public void clear() { for (char[] row : cells) Arrays.fill(row, ' '); cursorX = cursorY = 0; }
+        public void setCursor(int x, int y) { cursorX = Math.max(0, Math.min(width - 1, x)); cursorY = Math.max(0, Math.min(height - 1, y)); }
         public void write(String text) {
             if (text == null) return;
             for (int i = 0; i < text.length(); i++) {
@@ -160,11 +138,7 @@ public final class OCSystems {
             }
         }
         public String line(int y) { return new String(cells[Math.max(0, Math.min(height - 1, y))]); }
-        public List<String> snapshot() {
-            List<String> result = new ArrayList<>(height);
-            for (char[] row : cells) result.add(new String(row));
-            return List.copyOf(result);
-        }
+        public List<String> snapshot() { List<String> result = new ArrayList<>(height); for (char[] row : cells) result.add(new String(row)); return List.copyOf(result); }
     }
 
     public static final class Robot {
@@ -175,7 +149,6 @@ public final class OCSystems {
         private Direction direction = Direction.NORTH;
         private final Inventory inventory = new Inventory(16, 64);
         private final Energy energy = new Energy(100_000);
-
         public int x() { return x; }
         public int y() { return y; }
         public int z() { return z; }
@@ -184,16 +157,7 @@ public final class OCSystems {
         public Energy energy() { return energy; }
         public void turnLeft() { direction = Direction.values()[(direction.ordinal() + 3) % 4]; }
         public void turnRight() { direction = Direction.values()[(direction.ordinal() + 1) % 4]; }
-        public boolean move() {
-            if (!energy.consume(100)) return false;
-            switch (direction) {
-                case NORTH -> z--;
-                case EAST -> x++;
-                case SOUTH -> z++;
-                case WEST -> x--;
-            }
-            return true;
-        }
+        public boolean move() { if (!energy.consume(100)) return false; switch (direction) { case NORTH -> z--; case EAST -> x++; case SOUTH -> z++; case WEST -> x--; } return true; }
         public boolean up() { if (!energy.consume(100)) return false; y++; return true; }
         public boolean down() { if (!energy.consume(100)) return false; y--; return true; }
     }
@@ -201,10 +165,7 @@ public final class OCSystems {
     public static final class Storage {
         private final EepromMemory eeprom;
         private final HardDrive hardDrive;
-        public Storage(int eepromBytes, int driveBytes) {
-            this.eeprom = new EepromMemory(eepromBytes);
-            this.hardDrive = new HardDrive(driveBytes);
-        }
+        public Storage(int eepromBytes, int driveBytes) { eeprom = new EepromMemory(eepromBytes); hardDrive = new HardDrive(driveBytes); }
         public EepromMemory eeprom() { return eeprom; }
         public HardDrive hardDrive() { return hardDrive; }
         public VirtualFileSystem filesystem() { return hardDrive.filesystem(); }
@@ -228,11 +189,8 @@ public final class OCSystems {
     }
 
     public static String encodeForPersistence(List<String> lines) {
-        return String.join("\n", lines).getBytes(StandardCharsets.UTF_8).length == 0 ? "" : String.join("\n", lines);
+        String value = String.join("\n", lines);
+        return value.getBytes(StandardCharsets.UTF_8).length == 0 ? "" : value;
     }
-
-    public static List<String> decodePersistence(String value) {
-        if (value == null || value.isEmpty()) return List.of();
-        return List.of(value.split("\\n", -1));
-    }
+    public static List<String> decodePersistence(String value) { return value == null || value.isEmpty() ? List.of() : List.of(value.split("\\n", -1)); }
 }
