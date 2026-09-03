@@ -1,2 +1,0 @@
-Upstream source imported from MightyPirates/OpenComputers branch revert-3728-master-MC1.12.
-This directory is reference/staging material; the modern NeoForge build files in this repository remain authoritative.
