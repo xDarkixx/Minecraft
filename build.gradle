@@ -108,6 +108,49 @@ var generateModMetadata = tasks.register('generateModMetadata', ProcessResources
 sourceSets.main.resources.srcDir generateModMetadata
 neoForge.ideSyncTask generateModMetadata
 
+var generateOpenComputersModMetadata = tasks.register('generateOpenComputersModMetadata', ProcessResources) {
+    var replaceProperties = [
+        minecraft_version: minecraft_version,
+        minecraft_version_range: minecraft_version_range,
+        neo_version: neo_version,
+        opencomputers_mod_id: opencomputers_mod_id,
+        opencomputers_mod_name: opencomputers_mod_name,
+        mod_license: mod_license,
+        mod_version: mod_version
+    ]
+    inputs.properties replaceProperties
+    expand replaceProperties
+    from 'src/main/templates-opencomputers'
+    into 'build/generated/sources/opencomputersModMetadata'
+}
+
+tasks.register('openComputersJar', Jar) {
+    dependsOn tasks.classes, tasks.processResources, generateOpenComputersModMetadata
+    archiveFileName = 'OpenComputers.jar'
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+
+    from(sourceSets.main.output) {
+        include 'de/xdarkixx/minecraft/opencomputers/**'
+        include 'assets/opencomputers/**'
+        include 'data/opencomputers/**'
+        include 'opencomputers/**'
+    }
+
+    from(generateOpenComputersModMetadata) {
+        include 'META-INF/neoforge.mods.toml'
+    }
+
+    // Bundle only the Lua runtime needed by the OpenComputers port.
+    from(configurations.runtimeClasspath.collect { zipTree(it) }) {
+        include 'org/classdump/luna/**'
+        exclude 'META-INF/**'
+    }
+}
+
+tasks.named('build').configure {
+    dependsOn 'openComputersJar'
+}
+
 publishing {
     publications {
         register('mavenJava', MavenPublication) {
