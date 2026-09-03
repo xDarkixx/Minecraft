@@ -51,10 +51,11 @@ class OpenComputersCoreTest {
         assertEquals(650, energy.stored());
 
         OCSystems.Inventory inventory = new OCSystems.Inventory(2, 64);
-        assertEquals(64, inventory.insert("minecraft:iron_ingot", 100));
-        assertEquals(36, inventory.insert("minecraft:iron_ingot", 36));
-        assertEquals(100, inventory.count("minecraft:iron_ingot"));
+        assertEquals(100, inventory.insert("minecraft:iron_ingot", 100));
+        assertEquals(28, inventory.insert("minecraft:iron_ingot", 36));
+        assertEquals(128, inventory.count("minecraft:iron_ingot"));
         assertEquals(20, inventory.extract("minecraft:iron_ingot", 20));
+        assertEquals(108, inventory.count("minecraft:iron_ingot"));
     }
 
     @Test
