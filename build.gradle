@@ -9,7 +9,7 @@ group = mod_group_id
 version = mod_version
 
 base {
-    archivesName = 'minecraft-community'
+    archivesName = 'Minecraft'
 }
 
 java.toolchain.languageVersion = JavaLanguageVersion.of(25)
@@ -24,8 +24,6 @@ dependencies {
 }
 
 sourceSets.main.resources {
-    srcDir('DragonAPI/Resources')
-    srcDir('RotaryCraft/Resources')
     srcDir('src/generated/resources')
 }
 
@@ -39,16 +37,16 @@ neoForge {
     runs {
         client {
             client()
-            systemProperty 'neoforge.enabledGameTestNamespaces', 'dragonapi,rotarycraft,opencomputers'
+            systemProperty 'neoforge.enabledGameTestNamespaces', 'opencomputers'
         }
         server {
             server()
             programArgument '--nogui'
-            systemProperty 'neoforge.enabledGameTestNamespaces', 'dragonapi,rotarycraft,opencomputers'
+            systemProperty 'neoforge.enabledGameTestNamespaces', 'opencomputers'
         }
         gameTestServer {
             type = 'gameTestServer'
-            systemProperty 'neoforge.enabledGameTestNamespaces', 'dragonapi,rotarycraft,opencomputers'
+            systemProperty 'neoforge.enabledGameTestNamespaces', 'opencomputers'
         }
         data {
             clientData()
@@ -60,12 +58,6 @@ neoForge {
     }
 
     mods {
-        dragonapi {
-            sourceSet(sourceSets.main)
-        }
-        rotarycraft {
-            sourceSet(sourceSets.main)
-        }
         opencomputers {
             sourceSet(sourceSets.main)
         }
@@ -84,30 +76,6 @@ tasks.withType(Test).configureEach {
     useJUnitPlatform()
 }
 
-var generateModMetadata = tasks.register('generateModMetadata', ProcessResources) {
-    var replaceProperties = [
-        minecraft_version: minecraft_version,
-        minecraft_version_range: minecraft_version_range,
-        neo_version: neo_version,
-        mod_id: mod_id,
-        mod_name: mod_name,
-        mod_license: mod_license,
-        mod_version: mod_version,
-        mod_group_id: mod_group_id,
-        rotary_mod_id: rotary_mod_id,
-        rotary_mod_name: rotary_mod_name,
-        opencomputers_mod_id: opencomputers_mod_id,
-        opencomputers_mod_name: opencomputers_mod_name
-    ]
-    inputs.properties replaceProperties
-    expand replaceProperties
-    from 'src/main/templates'
-    into 'build/generated/sources/modMetadata'
-}
-
-sourceSets.main.resources.srcDir generateModMetadata
-neoForge.ideSyncTask generateModMetadata
-
 var generateOpenComputersModMetadata = tasks.register('generateOpenComputersModMetadata', ProcessResources) {
     var replaceProperties = [
         minecraft_version: minecraft_version,
@@ -124,9 +92,16 @@ var generateOpenComputersModMetadata = tasks.register('generateOpenComputersModM
     into 'build/generated/sources/opencomputersModMetadata'
 }
 
+sourceSets.main.resources.srcDir generateOpenComputersModMetadata
+neoForge.ideSyncTask generateOpenComputersModMetadata
+
+tasks.named('jar').configure {
+    archiveFileName = 'Minecraft.jar'
+}
+
 tasks.register('openComputersJar', Jar) {
     dependsOn tasks.classes, tasks.processResources, generateOpenComputersModMetadata
-    archiveFileName = 'OpenComputers.jar'
+    archiveFileName = 'Minecraft.jar'
     duplicatesStrategy = DuplicatesStrategy.EXCLUDE
 
     from(sourceSets.main.output) {
@@ -149,7 +124,6 @@ tasks.register('openComputersJar', Jar) {
         ])
     }
 
-    // Bundle only the Lua runtime needed by the OpenComputers port.
     from(configurations.runtimeClasspath.collect { zipTree(it) }) {
         include 'org/classdump/luna/**'
         exclude 'META-INF/**'
