@@ -10,7 +10,7 @@ public final class HardDrive {
             throw new IllegalArgumentException("hard-drive capacity out of bounds");
         }
         this.capacityBytes = capacityBytes;
-        this.filesystem = new VirtualFileSystem();
+        this.filesystem = new VirtualFileSystem(capacityBytes);
     }
 
     public int capacityBytes() {
