@@ -10,7 +10,7 @@ This directory tracks the modern port of the archived `MightyPirates/OpenCompute
 
 ## Current milestone
 
-- Target: **Minecraft Java 26.2 (latest stable release)"
+- Target: **Minecraft Java 26.2 (latest stable release)**
 - Loader: NeoForge 26.2.x
 - Java: 25
 - Mod ID: `opencomputers`
