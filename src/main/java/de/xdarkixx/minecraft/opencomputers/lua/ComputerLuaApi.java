@@ -1,12 +1,13 @@
 package de.xdarkixx.minecraft.opencomputers.lua;
 
-import de.xdarkixx.minecraft.opencomputers.ComputerRuntime;
+import de.xdarkixx.minecraft.opencomputers.runtime.ComputerRuntime;
 
 /** computer.* compatibility facade exposed to the embedded Lua environment. */
 public final class ComputerLuaApi {
     private final ComputerRuntime runtime;
 
     public ComputerLuaApi(ComputerRuntime runtime) {
+        if (runtime == null) throw new IllegalArgumentException("runtime is required");
         this.runtime = runtime;
     }
 
