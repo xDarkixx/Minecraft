@@ -1,0 +1,96 @@
+name: Reset OpenComputers from upstream
+
+on:
+  push:
+    branches: [ main ]
+
+permissions:
+  contents: write
+
+jobs:
+  reset:
+    if: startsWith(github.event.head_commit.message, 'Prepare clean OpenComputers reset')
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Preserve modern OpenComputers port
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p /tmp/oc-modern
+          for p in \
+            build.gradle settings.gradle gradle.properties gradlew gradlew.bat \
+            src/main/java/de/xdarkixx/minecraft/opencomputers \
+            src/test/java/de/xdarkixx/minecraft/opencomputers \
+            src/main/resources/assets/opencomputers \
+            src/main/resources/data/opencomputers; do
+            if [ -e "$p" ]; then
+              mkdir -p "/tmp/oc-modern/$(dirname "$p")"
+              cp -a "$p" "/tmp/oc-modern/$p"
+            fi
+          done
+
+      - name: Reset repository and import exact upstream source
+        shell: bash
+        run: |
+          set -euo pipefail
+          rm -rf /tmp/upstream
+          git clone --depth 1 --branch revert-3728-master-MC1.12 https://github.com/MightyPirates/OpenComputers.git /tmp/upstream
+
+          git rm -r .
+          mkdir -p OpenComputers/upstream-mc1.12
+          cp -a /tmp/upstream/. OpenComputers/upstream-mc1.12/
+
+          # Restore only the modern OpenComputers port and its tests/build files.
+          cp -a /tmp/oc-modern/. .
+          rm -rf src/main/java/de/xdarkixx/minecraft/dragonapi \
+                 src/main/java/de/xdarkixx/minecraft/rotarycraft \
+                 src/test/java/de/xdarkixx/minecraft/dragonapi \
+                 src/test/java/de/xdarkixx/minecraft/rotarycraft || true
+
+          mkdir -p .github/workflows
+          cat > .gitignore <<'EOF'
+.gradle/
+build/
+out/
+.idea/
+*.iml
+EOF
+
+          cat > PORTING_STATUS.md <<'EOF'
+# OpenComputers modern port
+
+This repository contains the original MightyPirates OpenComputers MC1.12 source under `OpenComputers/upstream-mc1.12` and the active NeoForge port in the modern project source tree.
+
+Target: Minecraft 26.2 (latest stable release at the time of this reset), NeoForge 26.2.0.62, Java 25.
+
+The upstream source is retained unchanged as the reference implementation. Modern Minecraft-facing code is ported separately so the original implementation can be compared function-by-function.
+EOF
+
+      - name: Rebuild cleanly
+        shell: bash
+        run: |
+          set -euo pipefail
+          chmod +x gradlew || true
+          ./gradlew --no-daemon clean build
+          test -f build/libs/OpenComputers.jar
+          jar tf build/libs/OpenComputers.jar | grep -q '^META-INF/neoforge.mods.toml$'
+          jar tf build/libs/OpenComputers.jar | grep -q '^de/xdarkixx/minecraft/opencomputers/OpenComputersMod.class$'
+          if jar tf build/libs/OpenComputers.jar | grep -Eq '(^|/)(dragonapi|rotarycraft|Reika)(/|$)'; then
+            echo 'Unrelated DragonAPI/RotaryCraft content found in OpenComputers.jar'
+            exit 1
+          fi
+
+      - name: Commit clean repository
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -A
+          git commit -m 'Reset repository to OpenComputers upstream and modern port' || exit 0
+          git push origin HEAD:main
