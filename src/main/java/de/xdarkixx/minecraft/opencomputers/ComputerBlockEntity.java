@@ -1,10 +1,10 @@
 package de.xdarkixx.minecraft.opencomputers;
 
 import net.minecraft.core.BlockPos;
-import net.minecraft.nbt.CompoundTag;
-import net.minecraft.core.HolderLookup;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.storage.ValueInput;
+import net.minecraft.world.level.storage.ValueOutput;
 
 /** Server-authoritative persistent computer state. */
 public final class ComputerBlockEntity extends BlockEntity {
@@ -27,16 +27,14 @@ public final class ComputerBlockEntity extends BlockEntity {
     }
 
     @Override
-    protected void saveAdditional(CompoundTag tag, HolderLookup.Provider registries) {
-        super.saveAdditional(tag, registries);
-        CompoundTag state = new CompoundTag();
-        computer.save(state);
-        tag.put("ComputerState", state);
+    protected void saveAdditional(ValueOutput output) {
+        super.saveAdditional(output);
+        computer.save(output);
     }
 
     @Override
-    protected void loadAdditional(CompoundTag tag, HolderLookup.Provider registries) {
-        super.loadAdditional(tag, registries);
-        tag.getCompound("ComputerState").ifPresent(computer::load);
+    protected void loadAdditional(ValueInput input) {
+        super.loadAdditional(input);
+        computer.load(input);
     }
 }
