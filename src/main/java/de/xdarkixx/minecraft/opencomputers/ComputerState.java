@@ -1,6 +1,7 @@
 package de.xdarkixx.minecraft.opencomputers;
 
-import net.minecraft.nbt.CompoundTag;
+import net.minecraft.world.level.storage.ValueInput;
+import net.minecraft.world.level.storage.ValueOutput;
 
 /** Persistent state for a modern OpenComputers computer. */
 public final class ComputerState {
@@ -32,15 +33,15 @@ public final class ComputerState {
         this.label = label == null ? "" : label.substring(0, Math.min(32, label.length()));
     }
 
-    public void save(CompoundTag tag) {
-        tag.putBoolean("Running", running);
-        tag.putLong("Ticks", ticks);
-        tag.putString("Label", label);
+    public void save(ValueOutput output) {
+        output.putBoolean("Running", running);
+        output.putLong("Ticks", ticks);
+        output.putString("Label", label);
     }
 
-    public void load(CompoundTag tag) {
-        running = tag.getBoolean("Running").orElse(false);
-        ticks = tag.getLong("Ticks").orElse(0L);
-        label = tag.getString("Label").orElse("");
+    public void load(ValueInput input) {
+        running = input.getBooleanOr("Running", false);
+        ticks = input.getLongOr("Ticks", 0L);
+        label = input.getStringOr("Label", "");
     }
 }
