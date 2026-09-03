@@ -136,8 +136,17 @@ tasks.register('openComputersJar', Jar) {
         include 'opencomputers/**'
     }
 
-    from(generateOpenComputersModMetadata) {
+    from('src/main/templates-opencomputers') {
         include 'META-INF/neoforge.mods.toml'
+        expand([
+            minecraft_version: minecraft_version,
+            minecraft_version_range: minecraft_version_range,
+            neo_version: neo_version,
+            opencomputers_mod_id: opencomputers_mod_id,
+            opencomputers_mod_name: opencomputers_mod_name,
+            mod_license: mod_license,
+            mod_version: mod_version
+        ])
     }
 
     // Bundle only the Lua runtime needed by the OpenComputers port.
