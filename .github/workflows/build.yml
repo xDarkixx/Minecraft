@@ -28,30 +28,23 @@ jobs:
             echo 'Clean OpenComputers layout already exists.'
             exit 0
           fi
-
           mkdir -p /tmp/oc-modern
           cp -a build.gradle settings.gradle gradle.properties src /tmp/oc-modern/
           cp -a .github/workflows/build.yml /tmp/oc-modern/build.yml
-
           rm -rf /tmp/upstream
           git clone --depth 1 --branch revert-3728-master-MC1.12 https://github.com/MightyPirates/OpenComputers.git /tmp/upstream
-
           git rm -r .
           mkdir -p OpenComputers/upstream-mc1.12
           cp -a /tmp/upstream/. OpenComputers/upstream-mc1.12/
-
           cp -a /tmp/oc-modern/build.gradle /tmp/oc-modern/settings.gradle /tmp/oc-modern/gradle.properties .
           cp -a /tmp/oc-modern/src .
           mkdir -p .github/workflows
           cp -a /tmp/oc-modern/build.yml .github/workflows/build.yml
-
           rm -f .github/workflows/reset-opencomputers.yml .github/workflows/import-opencomputers-mc1.12.yml
           rm -rf src/main/java/de/xdarkixx/minecraft/dragonapi src/main/java/de/xdarkixx/minecraft/rotarycraft src/test/java/de/xdarkixx/minecraft/dragonapi src/test/java/de/xdarkixx/minecraft/rotarycraft || true
-
           printf '%s\n' '.gradle/' 'build/' 'out/' '.idea/' '*.iml' > .gitignore
           printf '%s\n' '# OpenComputers modern port' '' 'The original MightyPirates OpenComputers MC1.12 source is retained unchanged under `OpenComputers/upstream-mc1.12` as the exact reference implementation.' '' 'Active target: Minecraft 26.2 (latest stable Java release), NeoForge 26.2.0.62, Java 25.' '' 'Minecraft 26.3 is currently a pre-release, so the stable target remains 26.2.' > PORTING_STATUS.md
           printf '%s\n' '# OpenComputers Community Port' '' 'Modern NeoForge port of OpenComputers for Minecraft 26.2.' '' 'The original MC1.12 source is retained unchanged under `OpenComputers/upstream-mc1.12` for exact comparison. The active port is under `src`.' > README.md
-
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
           git add -A
@@ -85,10 +78,12 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          test -f build/libs/OpenComputers.jar
-          jar tf build/libs/OpenComputers.jar | grep -q '^META-INF/neoforge.mods.toml$'
-          jar tf build/libs/OpenComputers.jar | grep -q '^de/xdarkixx/minecraft/opencomputers/OpenComputersMod.class$'
-          if jar tf build/libs/OpenComputers.jar | grep -Eq '(^|/)(dragonapi|rotarycraft|Reika)(/|$)'; then
+          jar_path=build/libs/OpenComputers.jar
+          test -f "$jar_path"
+          jar tf "$jar_path" > /tmp/opencomputers-jar.txt
+          grep -Fqx 'META-INF/neoforge.mods.toml' /tmp/opencomputers-jar.txt
+          grep -Fqx 'de/xdarkixx/minecraft/opencomputers/OpenComputersMod.class' /tmp/opencomputers-jar.txt
+          if grep -Eq '(^|/)(dragonapi|rotarycraft|Reika)(/|$)' /tmp/opencomputers-jar.txt; then
             echo 'Unrelated DragonAPI/RotaryCraft content found in OpenComputers.jar'
             exit 1
           fi
