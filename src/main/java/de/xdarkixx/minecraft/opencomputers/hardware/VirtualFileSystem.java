@@ -1,5 +1,7 @@
 package de.xdarkixx.minecraft.opencomputers.hardware;
 
+import java.nio.charset.StandardCharsets;
+import java.util.Base64;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Set;
@@ -11,9 +13,7 @@ public final class VirtualFileSystem {
     private final int capacityBytes;
     private int usedBytes;
 
-    public VirtualFileSystem() {
-        this(DEFAULT_CAPACITY);
-    }
+    public VirtualFileSystem() { this(DEFAULT_CAPACITY); }
 
     public VirtualFileSystem(int capacityBytes) {
         if (capacityBytes < 4 * 1024 || capacityBytes > DEFAULT_CAPACITY) {
@@ -25,10 +25,7 @@ public final class VirtualFileSystem {
     public int capacityBytes() { return capacityBytes; }
     public int usedBytes() { return usedBytes; }
     public int freeBytes() { return capacityBytes - usedBytes; }
-
-    public Set<String> list() {
-        return Set.copyOf(files.keySet());
-    }
+    public Set<String> list() { return Set.copyOf(files.keySet()); }
 
     public byte[] read(String path) {
         byte[] data = files.get(normalize(path));
@@ -52,6 +49,31 @@ public final class VirtualFileSystem {
         if (removed == null) return false;
         usedBytes -= removed.length;
         return true;
+    }
+
+    /** Compact, host-independent persistence format: path=base64(data), one entry per line. */
+    public String serialize() {
+        StringBuilder out = new StringBuilder();
+        for (Map.Entry<String, byte[]> entry : files.entrySet()) {
+            if (out.length() > 0) out.append('\n');
+            out.append(Base64.getUrlEncoder().withoutPadding().encodeToString(entry.getKey().getBytes(StandardCharsets.UTF_8)));
+            out.append('=');
+            out.append(Base64.getUrlEncoder().withoutPadding().encodeToString(entry.getValue()));
+        }
+        return out.toString();
+    }
+
+    public void deserialize(String serialized) {
+        files.clear();
+        usedBytes = 0;
+        if (serialized == null || serialized.isEmpty()) return;
+        for (String line : serialized.split("\\n", -1)) {
+            int separator = line.indexOf('=');
+            if (separator <= 0) continue;
+            String path = new String(Base64.getUrlDecoder().decode(line.substring(0, separator)), StandardCharsets.UTF_8);
+            byte[] data = Base64.getUrlDecoder().decode(line.substring(separator + 1));
+            write(path, data);
+        }
     }
 
     private static String normalize(String path) {
