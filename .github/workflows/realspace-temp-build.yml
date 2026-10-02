@@ -1,0 +1,62 @@
+name: RealSpace 1.7.10 temporary build
+on:
+  push:
+    branches:
+      - realspace-build-temp-1.2.0
+    paths:
+      - '.realspace-build/TRIGGER_BUILD'
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - name: Checkout temporary build branch
+        uses: actions/checkout@v4
+
+      - name: Restore RealSpace build payload
+        shell: bash
+        run: |
+          set -euo pipefail
+          cat .realspace-build/rs12_libchunk_*.b64 | tr -d '\r\n' | base64 -d > /tmp/realspace-build.zip
+          echo "9dab17979b0f59b32ddc1a5d850d39382b13ac52fd65743e3c59a86db6ac19b1  /tmp/realspace-build.zip" | sha256sum -c -
+          mkdir -p /tmp/realspace
+          unzip -q /tmp/realspace-build.zip -d /tmp/realspace
+          test -f /tmp/realspace/build.gradle
+          test -f /tmp/realspace/gradle.properties
+
+      - name: Set up Java 8
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '8'
+
+      - name: Set up Gradle 6.9.4
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '6.9.4'
+
+      - name: Forge 1.7.10 workspace
+        working-directory: /tmp/realspace
+        run: gradle --no-daemon --stacktrace setupDecompWorkspace
+
+      - name: Build universal client-server JAR
+        working-directory: /tmp/realspace
+        run: gradle --no-daemon --stacktrace clean exportFinalJar
+
+      - name: Verify final JAR
+        shell: bash
+        run: |
+          set -euo pipefail
+          JAR=/tmp/realspace/dist/RealSpace-1.7.10-1.2.0-beta.jar
+          test -s "$JAR"
+          sha256sum "$JAR"
+          jar tf "$JAR" | grep -q 'de/xdarkixx/realspace/RealSpaceMod.class'
+          jar tf "$JAR" | grep -q 'assets/realspace/lang/en_US.lang'
+
+      - name: Upload RealSpace JAR
+        uses: actions/upload-artifact@v4
+        with:
+          name: RealSpace-1.7.10-1.2.0-beta
+          path: /tmp/realspace/dist/RealSpace-1.7.10-1.2.0-beta.jar
+          if-no-files-found: error
+          retention-days: 7
