@@ -41,6 +41,9 @@ jobs:
           rm -rf /tmp/rfg/src/main
           mkdir -p /tmp/rfg/src/main
           cp -a /tmp/realspace/src/main/. /tmp/rfg/src/main/
+          if [ -d "$GITHUB_WORKSPACE/.realspace-build/overrides" ]; then
+            cp -a "$GITHUB_WORKSPACE/.realspace-build/overrides/." /tmp/rfg/src/main/java/
+          fi
           cat > /tmp/rfg/gradle.properties <<'EOF'
           gtnh.settings.blowdryerTag = 0.2.2
           modName = RealSpace
