@@ -5,10 +5,14 @@ on:
       - realspace-build-temp-1.2.0
     paths:
       - '.realspace-build/TRIGGER_BUILD'
+
 jobs:
   build:
     runs-on: ubuntu-latest
-    timeout-minutes: 45
+    timeout-minutes: 60
+    env:
+      VERSION: 1.2.0-beta
+
     steps:
       - name: Checkout temporary build branch
         uses: actions/checkout@v4
@@ -21,42 +25,83 @@ jobs:
           echo "9dab17979b0f59b32ddc1a5d850d39382b13ac52fd65743e3c59a86db6ac19b1  /tmp/realspace-build.zip" | sha256sum -c -
           mkdir -p /tmp/realspace
           unzip -q /tmp/realspace-build.zip -d /tmp/realspace
-          test -f /tmp/realspace/build.gradle
-          test -f /tmp/realspace/gradle.properties
+          test -f /tmp/realspace/src/main/java/de/xdarkixx/realspace/RealSpaceMod.java
 
-      - name: Set up Java 8
+      - name: Set up Java 25 build runtime
         uses: actions/setup-java@v4
         with:
           distribution: temurin
-          java-version: '8'
+          java-version: '25'
 
-      - name: Set up Gradle 6.9.4
-        uses: gradle/actions/setup-gradle@v4
-        with:
-          gradle-version: '6.9.4'
-
-      - name: Forge 1.7.10 workspace
-        working-directory: /tmp/realspace
-        run: gradle --no-daemon --stacktrace setupDecompWorkspace
-
-      - name: Build universal client-server JAR
-        working-directory: /tmp/realspace
-        run: gradle --no-daemon --stacktrace clean exportFinalJar
-
-      - name: Verify final JAR
+      - name: Prepare maintained 1.7.10 build system
         shell: bash
         run: |
           set -euo pipefail
-          JAR=/tmp/realspace/dist/RealSpace-1.7.10-1.2.0-beta.jar
-          test -s "$JAR"
-          sha256sum "$JAR"
-          jar tf "$JAR" | grep -q 'de/xdarkixx/realspace/RealSpaceMod.class'
-          jar tf "$JAR" | grep -q 'assets/realspace/lang/en_US.lang'
+          git clone --depth 1 https://github.com/GTNewHorizons/ExampleMod1.7.10.git /tmp/rfg
+          rm -rf /tmp/rfg/src/main
+          mkdir -p /tmp/rfg/src/main
+          cp -a /tmp/realspace/src/main/. /tmp/rfg/src/main/
+          cat > /tmp/rfg/gradle.properties <<'EOF'
+          gtnh.settings.blowdryerTag = 0.2.2
+          modName = RealSpace
+          modId = realspace
+          modGroup = de.xdarkixx.realspace
+          useModGroupForPublishing = true
+          autoUpdateBuildScript = false
+          minecraftVersion = 1.7.10
+          forgeVersion = 10.13.4.1614
+          channel = stable
+          mappingsVersion = 12
+          remoteMappings = https\://raw.githubusercontent.com/MinecraftForge/FML/1.7.10/conf/
+          developmentEnvironmentUserName = Developer
+          enableModernJavaSyntax = false
+          enableGenericInjection = false
+          generateGradleTokenClass =
+          gradleTokenVersion = VERSION
+          apiPackage = api
+          accessTransformersFile =
+          usesMixins = false
+          forceEnableMixins = false
+          usesShadowedDependencies = false
+          includeWellKnownRepositories = true
+          usesMavenPublishing = false
+          disableSpotless = true
+          disableCheckstyle = true
+          customArchiveBaseName = RealSpace-1.7.10
+          org.gradle.configuration-cache = false
+          org.gradle.parallel = false
+          EOF
+          sed -i 's/${version}/1.2.0-beta/g; s/${mcversion}/1.7.10/g' /tmp/rfg/src/main/resources/mcmod.info
+          chmod +x /tmp/rfg/gradlew
 
-      - name: Upload RealSpace JAR
+      - name: Build with RetroFuturaGradle
+        working-directory: /tmp/rfg
+        shell: bash
+        run: |
+          set -euo pipefail
+          ./gradlew --version
+          ./gradlew --no-daemon --stacktrace clean build
+
+      - name: Select and verify production JAR
+        shell: bash
+        run: |
+          set -euo pipefail
+          echo "Produced jars:"
+          find /tmp/rfg/build/libs -maxdepth 1 -type f -name '*.jar' -printf '%f\n' | sort
+          JAR="$(find /tmp/rfg/build/libs -maxdepth 1 -type f -name '*.jar' ! -name '*sources*' ! -name '*dev*' ! -name '*api*' | sort | head -n1)"
+          test -n "$JAR"
+          test -s "$JAR"
+          mkdir -p /tmp/final
+          cp "$JAR" /tmp/final/RealSpace-1.7.10-1.2.0-beta.jar
+          sha256sum /tmp/final/RealSpace-1.7.10-1.2.0-beta.jar
+          jar tf /tmp/final/RealSpace-1.7.10-1.2.0-beta.jar | grep -q 'de/xdarkixx/realspace/RealSpaceMod.class'
+          jar tf /tmp/final/RealSpace-1.7.10-1.2.0-beta.jar | grep -q 'assets/realspace/lang/en_US.lang'
+          jar tf /tmp/final/RealSpace-1.7.10-1.2.0-beta.jar | grep -q 'assets/realspace/textures'
+
+      - name: Upload RealSpace universal JAR
         uses: actions/upload-artifact@v4
         with:
           name: RealSpace-1.7.10-1.2.0-beta
-          path: /tmp/realspace/dist/RealSpace-1.7.10-1.2.0-beta.jar
+          path: /tmp/final/RealSpace-1.7.10-1.2.0-beta.jar
           if-no-files-found: error
           retention-days: 7
